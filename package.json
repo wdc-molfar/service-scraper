@@ -1,0 +1,30 @@
+{
+  "name": "@molfar/service-scraper",
+  "version": "1.0.0",
+  "description": "Scanany based scraper microservice",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wdc-molfar/service-scraper.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wdc-molfar/service-scraper/issues"
+  },
+  "homepage": "https://github.com/wdc-molfar/service-scraper#readme",
+  "dependencies": {
+    "@molfar/scanany": "github:boldak/scanany",
+    "@molfar/service-chassis": "github:wdc-molfar/service-chassis",
+    "js-yaml": "^4.1.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@molfar/amqp-client": "github:wdc-molfar/amqp-client",
+    "@molfar/csc": "github:wdc-molfar/csc",
+    "uuid": "^9.0.0"
+  }
+}

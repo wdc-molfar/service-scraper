@@ -1,0 +1,22 @@
+msapi: "1.0.1"
+
+metadata: 
+  
+    id: "@molfar/service-dummy"
+  
+    title: Dummy @molfar microservice 
+  
+service:
+
+    monitoring:
+        time-interval: 1000
+        transport:
+            amqp: 
+                url: amqps://xoilebqg:Nx46t4t9cxQ2M0rF2rIyZPS_xbAhmJIG@hornet.rmq.cloudamqp.com/xoilebqg
+            exchange:
+                name: "metrics"
+                mode: fanout
+                options:
+                    durable: true
+                    persistent: true
+    
