@@ -20,7 +20,9 @@
     "@molfar/scanany": "github:boldak/scanany",
     "@molfar/service-chassis": "github:wdc-molfar/service-chassis",
     "js-yaml": "^4.1.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "mongodb": "^4.11.0"
   },
   "devDependencies": {
     "@molfar/amqp-client": "github:wdc-molfar/amqp-client",
