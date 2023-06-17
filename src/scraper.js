@@ -45,6 +45,7 @@ const execute = async task => {
 	cachedData = normalizeCachedData( schedule, cachedData )
 
 
+
 	if (scrapedData.error){
 		cachedData.error = scrapedData.error
 		cachedData.messages = []

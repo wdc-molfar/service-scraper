@@ -22,7 +22,8 @@
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
-    "mongodb": "^4.11.0"
+    "mongodb": "^4.11.0",
+    "simpl.db": "^2.12.1"
   },
   "devDependencies": {
     "@molfar/amqp-client": "github:wdc-molfar/amqp-client",

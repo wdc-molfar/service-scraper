@@ -31,7 +31,7 @@ const run = async () => {
 	res = await service.start()
 	console.log("Start", res)
 	console.log("Running... 10s")
-	await delay(120000) 
+	await delay(12000000) 
 
 	res = await service.stop()
 	container.terminateInstance(service)
