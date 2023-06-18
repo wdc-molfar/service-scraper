@@ -39,9 +39,7 @@ const execute = async task => {
 	const schedule = task.scraper.scanany.params.schedule
 	
 	let scrapedData = await executeScanany(task)
-
-	let cachedData = await cacheDb.getCache(schedule.source)
-	
+	let cachedData = cacheDb.getCache(schedule.source)
 	cachedData = normalizeCachedData( schedule, cachedData )
 
 
@@ -89,7 +87,6 @@ const execute = async task => {
 
 	if( newCachedData.timeline.length > 20) newCachedData.timeline.shift()
 	
-
 	await cacheDb.updateCache(newCachedData)
 
 	return outputData
@@ -99,7 +96,7 @@ const execute = async task => {
 
 module.exports =  conf => {
 	config = conf
-	cacheDb = require("./mongodb")(config)
+	cacheDb = require("./simpledb")	
 	return {
 		execute
 	}	 
