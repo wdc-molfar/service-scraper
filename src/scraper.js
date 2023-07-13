@@ -27,7 +27,7 @@ const normalizeCachedData = (schedule, data) => {
 		source: schedule.source,
 		messages: [],
 		timeline:[],
-		error: null
+		error: []
 	})
 
 	delete res._id
@@ -45,9 +45,9 @@ const execute = async task => {
 
 
 	if (scrapedData.error){
-		cachedData.error = scrapedData.error
-		cachedData.messages = []
-		await cacheDb.updateCache(cachedData)
+		cachedData.error = [ {at: newDate(), stage:"scanany", error: scrapedData.error} ]
+		// cachedData.messages = []
+		cacheDb.updateCache(cachedData)
 		return []
 	}
 
@@ -57,26 +57,24 @@ const execute = async task => {
 						.map( d => extend( {}, { schedule }, d ))
 
 
-	try {
 		let validator = Middlewares.Schema.validator(config.service.produce.message)
+		
 		outputData.forEach( m => {
-			validator( null, {content: m}, () => {})
+			try {
+				validator( null, {content: m}, () => {})
+			} catch (e) {
+				cachedData.error.push({at: newDate(), stage:"validation", message:m, error:e.toString()})
+				m.noValidate = true
+			}	
 		})
-	} catch (e) {
-		cachedData.error = e.toString()
-		cachedData.messages = []
-		console.log("ERROR >> ", cachedData)
-		await cacheDb.updateCache(cachedData)
-		return []
-	}
-
-
+	
+	outputData = outputData.filter( d => !d.noValidate)	
 
 	let newCachedData = {
 		source: schedule.source,
 		messages: scrapedData.map( d => d.scraper.message.md5),
 		timeline: cachedData.timeline,
-		error: null
+		error: cachedData.error
 	}
 
 	newCachedData.timeline.push({

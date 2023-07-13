@@ -20,12 +20,13 @@ const run = async () => {
 
 	let config = yaml2js(fs.readFileSync(path.resolve(__dirname, "./service.msapi.yaml")).toString())
 	config = await resolveRefs(config)
-
+	console.log("config", config)
 	
 	const container = new Container()
 
 	container.hold(servicePath, "@molfar/scraper")
 	const service = await container.startInstance(container.getService(s => s.name == "@molfar/scraper"))
+	console.log("service", service)
 	let res = await service.configure(config)
 	console.log("Configure", res)
 	res = await service.start()

@@ -9,7 +9,7 @@ const getCache = source => {
 }
 
 
-const updateCache = async data => {
+const updateCache = data => {
     let res 
     let f = Cache.get(d => d.source == data.source)
     if(!f){
