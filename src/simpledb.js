@@ -1,32 +1,47 @@
 const SimplDB = require('simpl.db');
 const db = new SimplDB();
+const { extend } = require("lodash")
 
 const Cache = db.createCollection('cache');
 
-const getCache = source => {
-	let res = Cache.get(d => d.source == source)
-	return res
+
+const get = async source => {
+	
+    let res = await Cache.get(d => d.source == source)
+    
+    if(!res){
+        res = await Cache.create({
+            source,
+            name: "",
+            params: {},
+            messages: new Array(0),
+            timeline: new Array(0)
+        })
+    }
+    
+    res = await Cache.get(d => d.source == source)
+
+    return res 
 }
 
 
-const updateCache = data => {
-    let res 
-    let f = Cache.get(d => d.source == data.source)
-    if(!f){
-    	res = Cache.create(data)
-    } else {
-    	res = Cache.update(
-    		d => {
-    			d = data
-    		},
-    		t => t.source == data.source
-    	)
-    }
+const update = async data => {
 
-    return res
+    if(data.save){
+        await data.save()
+        return
+    } else {
+        await Cache.update(
+             d => {
+                 d = data
+             },
+             t => t.source == data.source
+         )
+    }
+    
 }
 
 module.exports = {
-		getCache,
-		updateCache
+		get,
+		update
 	}

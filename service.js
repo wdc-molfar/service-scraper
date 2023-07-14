@@ -32,7 +32,7 @@
 					}
                 }
 
-                console.log("execute", task, task.scraper.scanany.params)
+                console.log("execute", task.scraper.scanany.params)
                	
                 let res = await execute(task)
                 console.log(`Send ${res.length} messages...`)

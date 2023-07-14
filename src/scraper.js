@@ -1,10 +1,9 @@
 const Scraper = require("@molfar/scanany")
 const { extend } = require("lodash")
-
+const cacheDb = require("./simpledb")	
+	
 const {  Middlewares } = require("@molfar/service-chassis")
 
-
-let cacheDb
 let config
 
 const executeScanany = async task => {
@@ -22,79 +21,79 @@ const executeScanany = async task => {
 }
 
 
-const normalizeCachedData = (schedule, data) => {
-	let res = (data || {
-		source: schedule.source,
-		messages: [],
-		timeline:[],
-		error: []
-	})
-
-	delete res._id
-	return res
-}	 
-
 const execute = async task => {
+	try {
+		
+		console.log(task.scraper.scanany.params.schedule.name)
+		
+		const schedule = task.scraper.scanany.params.schedule
+		let cachedData = await cacheDb.get(schedule.source)
+		cachedData.name = task.scraper.scanany.params.schedule.name
+		cachedData.params = task.scraper.scanany.params.task
+
+
+		let scrapedData = await executeScanany(task)
+
+		if (scrapedData.error){
+			
+			cachedData.timeline.push({date: new Date(), stage:"scanany", error: scrapedData.error})
+			await cacheDb.update(cachedData)
+			
+			return []
+		}
+
 	
-	const schedule = task.scraper.scanany.params.schedule
-	
-	let scrapedData = await executeScanany(task)
-	let cachedData = cacheDb.getCache(schedule.source)
-	cachedData = normalizeCachedData( schedule, cachedData )
-
-
-
-	if (scrapedData.error){
-		cachedData.error = [ {at: newDate(), stage:"scanany", error: scrapedData.error} ]
-		// cachedData.messages = []
-		cacheDb.updateCache(cachedData)
-		return []
-	}
-
-	
-	let outputData = scrapedData
-						.filter( d => !cachedData.messages.includes(d.scraper.message.md5))
-						.map( d => extend( {}, { schedule }, d ))
-
-
+		let scraped_md5 = scrapedData.map(d => d.scraper.message.md5)
+		let cached_md5 = cachedData.messages.map( d => {
+			let res = d 
+			return res
+		})
+		
+		let outputData = scrapedData
+							.filter( d => !cachedData.messages.includes(d.scraper.message.md5))
+							.map( d => extend( {}, { schedule }, d ))
+						
 		let validator = Middlewares.Schema.validator(config.service.produce.message)
 		
 		outputData.forEach( m => {
 			try {
 				validator( null, {content: m}, () => {})
 			} catch (e) {
-				cachedData.error.push({at: newDate(), stage:"validation", message:m, error:e.toString()})
+				cachedData.timeline.push({date: new Date(), stage:"validation", message:m, error:e.toString()})
 				m.noValidate = true
+				console.log("ERROR", e.toString())
 			}	
 		})
+		
+		outputData = outputData.filter( d => !d.noValidate)	
+
+		cachedData.messages = scraped_md5.map(d => d)
+		
+		cachedData.timeline.push({
+			date: new Date(),
+			scrapedMessages: scrapedData.length,
+			newMessages: outputData.length,
+			oldMessages: scrapedData.length - outputData.length,
+			// scraped_md5,
+			// cached_md5
+		})
+
+		if( cachedData.timeline.length > 100) cachedData.timeline.shift()
+		
+		await cacheDb.update(cachedData)
+
+		return outputData
 	
-	outputData = outputData.filter( d => !d.noValidate)	
-
-	let newCachedData = {
-		source: schedule.source,
-		messages: scrapedData.map( d => d.scraper.message.md5),
-		timeline: cachedData.timeline,
-		error: cachedData.error
-	}
-
-	newCachedData.timeline.push({
-		date: new Date(),
-		newMessages: outputData.length,
-		oldMessages: scrapedData.length - outputData.length
-	})
-
-	if( newCachedData.timeline.length > 20) newCachedData.timeline.shift()
-	
-	await cacheDb.updateCache(newCachedData)
-
-	return outputData
+	} catch (e) {
+		console.log(e.toString())
+		return []
+	}	
 
 }
 
 
 module.exports =  conf => {
 	config = conf
-	cacheDb = require("./simpledb")	
 	return {
 		execute
 	}	 
