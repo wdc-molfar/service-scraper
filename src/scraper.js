@@ -38,7 +38,7 @@ const execute = async task => {
 			
 			cachedData.timeline.push({date: new Date(), stage:"scanany", error: scrapedData.error})
 			await cacheDb.update(cachedData)
-			
+			console.log(`ERROR stage scanany: scrapedData.error`)
 			return []
 		}
 
@@ -61,7 +61,7 @@ const execute = async task => {
 			} catch (e) {
 				cachedData.timeline.push({date: new Date(), stage:"validation", message:m, error:e.toString()})
 				m.noValidate = true
-				console.log("ERROR", e.toString())
+				console.log("ERROR stage validation", e.toString())
 			}	
 		})
 		
@@ -71,6 +71,7 @@ const execute = async task => {
 		
 		cachedData.timeline.push({
 			date: new Date(),
+			version:"1.0.1",
 			scrapedMessages: scrapedData.length,
 			newMessages: outputData.length,
 			oldMessages: scrapedData.length - outputData.length,
@@ -78,14 +79,14 @@ const execute = async task => {
 			// cached_md5
 		})
 
-		if( cachedData.timeline.length > 100) cachedData.timeline.shift()
+		if( cachedData.timeline.length > 50) cachedData.timeline.shift()
 		
 		await cacheDb.update(cachedData)
 
 		return outputData
 	
 	} catch (e) {
-		console.log(e.toString())
+		console.log(`ERROR service: ${e.toString()}`)
 		return []
 	}	
 
