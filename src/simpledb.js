@@ -9,15 +9,17 @@ const get = async source => {
 	
     let res = await Cache.get(d => d.source == source)
     
-    if(!res){
-        res = await Cache.create({
-            source,
-            name: "",
-            params: {},
-            messages: new Array(0),
-            timeline: new Array(0)
-        })
+    if(res){
+        return res
     }
+
+    res = await Cache.create({
+        source,
+        name: "",
+        params: {},
+        messages: new Array(0),
+        timeline: new Array(0)
+    })
     
     res = await Cache.get(d => d.source == source)
 

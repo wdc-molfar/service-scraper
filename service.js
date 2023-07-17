@@ -32,10 +32,9 @@
 					}
                 }
 
-                console.log("execute", task.scraper.scanany.params)
-               	
+                
                 let res = await execute(task)
-                console.log(`Send ${res.length} messages...`)
+                console.log(`Send ${res.length} messages...\n\n`)
                 res.forEach( d => {
                 	this.publisher.send(d)
                 })

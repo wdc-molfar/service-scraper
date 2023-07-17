@@ -1,10 +1,14 @@
 const Scraper = require("@molfar/scanany")
 const { extend } = require("lodash")
 const cacheDb = require("./simpledb")	
-	
+const moment = require("moment")
+
 const {  Middlewares } = require("@molfar/service-chassis")
 
 let config
+
+const date = () => moment().format("YYYY-MM-DD HH:mm:ss")
+
 
 const executeScanany = async task => {
 	try {
@@ -24,7 +28,7 @@ const executeScanany = async task => {
 const execute = async task => {
 	try {
 		
-		console.log(task.scraper.scanany.params.schedule.name)
+		console.log(`${date()} INFO: Scrap: ${task.scraper.scanany.params.schedule.name}`)
 		
 		const schedule = task.scraper.scanany.params.schedule
 		let cachedData = await cacheDb.get(schedule.source)
@@ -38,7 +42,7 @@ const execute = async task => {
 			
 			cachedData.timeline.push({date: new Date(), stage:"scanany", error: scrapedData.error})
 			await cacheDb.update(cachedData)
-			console.log(`ERROR stage scanany: scrapedData.error`)
+			console.log(`${date()} ERROR: Stage scanany: ${scrapedData.error}`)
 			return []
 		}
 
@@ -49,10 +53,18 @@ const execute = async task => {
 			return res
 		})
 		
+		console.log(`${date()} INFO: Scraped:\n ${scraped_md5.join("\n")}\n`)
+		console.log(`${date()} INFO: Cached:\n ${cached_md5.join("\n")}\n`)
+				
+
+
 		let outputData = scrapedData
 							.filter( d => !cachedData.messages.includes(d.scraper.message.md5))
 							.map( d => extend( {}, { schedule }, d ))
-						
+
+		console.log(`${date()} INFO: New:\n ${outputData.map(d => d.scraper.message.md5).join("\n")}\n`)
+								
+		
 		let validator = Middlewares.Schema.validator(config.service.produce.message)
 		
 		outputData.forEach( m => {
@@ -61,12 +73,14 @@ const execute = async task => {
 			} catch (e) {
 				cachedData.timeline.push({date: new Date(), stage:"validation", message:m, error:e.toString()})
 				m.noValidate = true
-				console.log("ERROR stage validation", e.toString())
+				console.log(`${date()} ERROR: stage validation: ${e.toString()}`)
 			}	
 		})
 		
 		outputData = outputData.filter( d => !d.noValidate)	
 
+		console.log(`${date()} INFO: Valid:\n ${outputData.map(d => d.scraper.message.md5).join("\n")}\n`)
+		
 		cachedData.messages = scraped_md5.map(d => d)
 		
 		cachedData.timeline.push({
@@ -86,7 +100,7 @@ const execute = async task => {
 		return outputData
 	
 	} catch (e) {
-		console.log(`ERROR service: ${e.toString()}`)
+		console.log(`${date()} ERROR: service: ${e.toString()}`)
 		return []
 	}	
 
