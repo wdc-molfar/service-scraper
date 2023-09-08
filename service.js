@@ -16,28 +16,36 @@
 
         await this.consumer.use([
             Middlewares.Json.parse,
+            async (err, msg, next) => {
+                console.log("Receive message", msg.content)
+                next()
+            },           
             Middlewares.Schema.validator(this.config.service.consume.message),
             Middlewares.Error.Log,
-            Middlewares.Error.BreakChain,
+            // Middlewares.Error.BreakChain,
 
             async (err, msg, next) => {
-                let m = msg.content
-                let params = yaml2js(m.scraper.scanany.params)
-                let task = {
-                	scraper:{
-						scanany:{
-							script: yaml2js(m.scraper.scanany.script),
-							params: extend( {}, params || {} , { schedule: m.schedule } ) 
-						}
-					}
-                }
+                if(!err){
+                    let m = msg.content
+                    let params = yaml2js(m.scraper.scanany.params)
+                    let task = {
+                    	scraper:{
+    						scanany:{
+    							script: yaml2js(m.scraper.scanany.script),
+    							params: extend( {}, params || {} , { schedule: m.schedule } ) 
+    						}
+    					}
+                    }
 
-                
-                let res = await execute(task)
-                console.log(`Send ${res.length} messages...\n\n`)
-                res.forEach( d => {
-                	this.publisher.send(d)
-                })
+                    
+                    let res = await execute(task)
+                    console.log(`Send ${res.length} messages...\n\n`)
+                    res.forEach( d => {
+                    	this.publisher.send(d)
+                    })
+                } else {
+                    console.log("Ignore message")
+                }   
 
                 msg.ack()
             }
