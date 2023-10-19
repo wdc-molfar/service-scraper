@@ -17,7 +17,7 @@
         await this.consumer.use([
             Middlewares.Json.parse,
             async (err, msg, next) => {
-                console.log("Receive message", msg.content)
+                console.log("Receive message", msg.content.schedule.name)
                 next()
             },           
             Middlewares.Schema.validator(this.config.service.consume.message),
@@ -41,7 +41,14 @@
                     let res = await execute(task)
                     console.log(`Send ${res.length} messages...\n\n`)
                     res.forEach( d => {
-                    	this.publisher.send(d)
+                        // if message then send to lang-detector else feedback into scheduler exchange
+                    	if(d.type == "task"){
+                            console.log("Create Nested Task")
+                            this.feedback.send(extend({}, m, d))
+                        } else {
+                            this.publisher.send(d)    
+                        }
+                        
                     })
                 } else {
                     console.log("Ignore message")
@@ -55,8 +62,11 @@
 
 
  		this.publisher = await AmqpManager.createPublisher(this.config.service.produce)
-        
         await this.publisher.use( Middlewares.Json.stringify )
+
+        this.feedback = await AmqpManager.createPublisher(this.config.service.feedback)
+        await this.feedback.use( Middlewares.Json.stringify )
+
 
  		resolve({status: "configured"})
 	
@@ -74,6 +84,7 @@
 		
  		await this.consumer.close()
 		await this.publisher.close()
+        await this.feedback.close()
 		resolve({status: "stoped"})
 	
 	}

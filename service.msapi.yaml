@@ -139,3 +139,11 @@ service:
             $ref: "#/components/schemas/OUTPUT"
 
     
+    feedback:
+        
+        amqp:
+            url: "amqps://jixxkoct:pFgVpsB--OFx4TjtTAILd5OWLbu_YI3j@toad.rmq.cloudamqp.com/jixxkoct"
+        
+        exchange:
+            name: scheduler
+            mode: direct

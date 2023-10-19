@@ -1,5 +1,5 @@
 const Scraper = require("@molfar/scanany")
-const { extend } = require("lodash")
+const { extend, isArray, drop, uniqBy } = require("lodash")
 const cacheDb = require("./simpledb")	
 const moment = require("moment")
 
@@ -28,7 +28,7 @@ const executeScanany = async task => {
 const execute = async task => {
 	try {
 		
-		console.log(`${date()} INFO: Scrap: ${task.scraper.scanany.params.schedule.name}`)
+		console.log(`${date()} INFO: Scrap: ${task.scraper.scanany.params.schedule.name} \n ${JSON.stringify(task.scraper.scanany.params, null, " ")}`)
 		
 		const schedule = task.scraper.scanany.params.schedule
 		let cachedData = await cacheDb.get(schedule.source)
@@ -38,6 +38,7 @@ const execute = async task => {
 
 		let scrapedData = await executeScanany(task)
 
+		
 		if (scrapedData.error){
 			
 			cachedData.timeline.push({date: new Date(), stage:"scanany", error: scrapedData.error})
@@ -45,6 +46,9 @@ const execute = async task => {
 			console.log(`${date()} ERROR: Stage scanany: ${scrapedData.error}`)
 			return []
 		}
+
+		scrapedData = (isArray(scrapedData)) ? scrapedData : [scrapedData]
+		if(scrapedData[0] && scrapedData[0].type == "task") return scrapedData
 
 	
 		let scraped_md5 = scrapedData.map(d => d.scraper.message.md5)
@@ -81,7 +85,8 @@ const execute = async task => {
 
 		console.log(`${date()} INFO: Valid:\n ${outputData.map(d => d.scraper.message.md5).join("\n")}\n`)
 		
-		cachedData.messages = scraped_md5.map(d => d)
+		cachedData.messages = uniqBy(cachedData.messages.concat(scraped_md5.map(d => d)))
+		cachedData.messages = drop(cachedData.messages, (cachedData.messages > 150) ? cachedData.messages.length-150 : 0)
 		
 		cachedData.timeline.push({
 			date: new Date(),
