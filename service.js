@@ -4,6 +4,16 @@
  let service = new ServiceWrapper({
  	
  	config: null,
+    health: true,
+
+    //-------------- Add heartbeat exported method
+
+         async onHeartbeat(data, resolve){
+            resolve({})
+        },
+ 
+    //--------------------------------------------
+
  	
  	async onConfigure(config, resolve){
  		
